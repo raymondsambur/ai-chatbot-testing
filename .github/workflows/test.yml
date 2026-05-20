@@ -1,0 +1,67 @@
+name: AI Chatbot Test Suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  BASE_URL: https://chatbot.ai-sdk.dev/demo
+  INTER_SCENARIO_DELAY: "3000"
+  RETRY_ATTEMPTS: "3"
+  BACKOFF_MULTIPLIER: "2"
+  SEMANTIC_THRESHOLD: "0.7"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Run format check
+        run: npm run format-check
+
+      - name: Run property-based tests
+        run: npm run test:properties
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run BDD scenarios
+        run: npm run test
+
+      - name: Generate Allure report
+        if: always()
+        run: npm run report
+
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 30
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-screenshots
+          path: allure-results/
+          retention-days: 30
