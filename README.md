@@ -19,24 +19,26 @@ The chatbot might say "Hi there! What can I do for you?" instead. Both are valid
 
 Each response gets checked through up to 4 layers:
 
-- **Structural** — Is it non-empty? Long enough? Has complete sentences?
-- **Keywords** — Does it contain at least one word from a set of acceptable terms?
-- **Negative patterns** — Does it *not* contain things it shouldn't? (profanity, HTML artifacts, overclaiming capabilities)
+- **Structural** — Is it non-empty? Long enough? Has complete sentences? Starts with a capital letter?
+- **Keywords** — Does it contain at least one word from a set of acceptable terms? (scenario-specific, not generic)
+- **Negative patterns** — Does it *not* contain things it shouldn't? (profanity, HTML artifacts, overclaiming, fabricated details, persona vocabulary)
 - **Semantic** — Is the *meaning* close enough to what we expected? (TF-IDF cosine similarity)
 
 All specified layers must pass. If any fails, you get a clear message saying which layer failed and why.
+
+Most scenarios use 3-4 layers simultaneously. For example, the hallucination detection scenarios check that the response contains correction language (keywords), doesn't affirm the false premise (negative patterns), doesn't elaborate with fabricated details (negative patterns), and forms complete sentences (structural). A response has to pass all of them.
 
 ## What's Tested
 
 Five feature files covering different aspects of chatbot behavior:
 
-- **Conversational** — greetings, follow-ups, empty input, special characters, long messages
-- **Intent recognition** — factual questions, help requests, commands, sentiment, ambiguous input
-- **Hallucination detection** — false premises, fake entities, capability overclaiming, verifiable facts
-- **Tone & persona** — stays professional under provocation, resists persona adoption requests
-- **Reliability** — timeout handling, exponential backoff retry, rate limit mitigation
+- **Conversational** — greetings (strict keyword matching), follow-ups (topic relevance verification), empty input, special characters, long messages, rapid messaging
+- **Intent recognition** — factual questions (with refusal detection), help requests, commands (with per-command action verification), sentiment, ambiguous input
+- **Hallucination detection** — false premises (elaboration detection), fake entities (detail fabrication check), capability overclaiming (limitation acknowledgment), verifiable facts (multi-value contradiction check)
+- **Tone & persona** — profanity filtering, hostile word echo prevention, per-persona vocabulary resistance (pirate/villain/cowboy/Shakespeare/robot)
+- **Reliability** — timeout handling with response quality checks, exponential backoff retry, rate limit mitigation
 
-56 scenarios total, all written in Gherkin so you can read them without knowing TypeScript.
+~60 scenarios total, all written in Gherkin so you can read them without knowing TypeScript.
 
 ## Tech Stack
 
@@ -111,6 +113,7 @@ Screenshots from failures get uploaded as artifacts. The workflow has a 15-minut
 
 ## Things I'd Do Differently
 
-- The semantic validator works but TF-IDF cosine similarity is pretty basic. A proper embedding model would be more accurate, but I wanted zero external API dependencies.
-- Some scenarios are inherently flaky because the chatbot's behavior changes with model updates. The layered validation helps, but it's not bulletproof.
+- The semantic validator works but TF-IDF cosine similarity is pretty basic. A local embedding model (like all-MiniLM-L6-v2 via ONNX) would be more accurate, but I wanted zero setup complexity for reviewers.
+- For production monitoring, I'd add an LLM-as-judge layer using a local 3B model (Phi-3-mini or Llama 3.2) for the hallucination scenarios specifically. The keyword/pattern approach catches the obvious 80% but misses subtle fabrications that sound confident.
+- Some scenarios are inherently flaky because the chatbot's behavior changes with model updates. The multi-layer validation helps, but it's not bulletproof — I've tuned the keyword sets to be broad enough to handle phrasing variation while still catching real failures.
 - I'd add visual regression testing for the chat UI itself if this were a real product.
