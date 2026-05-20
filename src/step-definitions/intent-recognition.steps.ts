@@ -85,9 +85,12 @@ Then(
 When(
   'the user sends a command-style input {string}',
   async function (this: CustomWorld, command: string) {
+    this.lastResponse = command; // Store the command for later reference
     await this.chatbotPage.sendMessage(command);
     await this.chatbotPage.waitForResponseComplete();
     this.lastResponse = await this.chatbotPage.getLatestResponse();
+    // Store the original command in a custom property for the action step
+    (this as CustomWorld & { lastCommand?: string }).lastCommand = command;
   },
 );
 
@@ -105,6 +108,90 @@ Then(
     );
   },
 );
+
+/**
+ * Validates that the response demonstrates action on the command.
+ * Per-command validation:
+ * - translate: check for target language word
+ * - list: check for numbered items or bullet points
+ * - summarize: check min 100 chars
+ * - explain/define: check for substantive explanation
+ */
+Then('the response should demonstrate action on the command', async function (this: CustomWorld) {
+  const command = (
+    (this as CustomWorld & { lastCommand?: string }).lastCommand || ''
+  ).toLowerCase();
+  const response = this.lastResponse;
+
+  if (command.includes('translate')) {
+    // For translate commands, check that the response contains a translated word
+    // or mentions the target language
+    const translateKeywords = [
+      'spanish',
+      'french',
+      'german',
+      'hola',
+      'bonjour',
+      'translation',
+      'means',
+    ];
+    const result = this.validator.validateAll(response, {
+      keywords: { set: translateKeywords, minMatches: 1 },
+    });
+    assert.ok(
+      result.passed,
+      `Translation response should contain target language content: ${result.results.map((r) => r.message).join('; ')}`,
+    );
+  } else if (command.includes('list')) {
+    // For list commands, check for numbered items or bullet points
+    const hasNumberedItems = /\d+[.)]\s/.test(response) || /[-•*]\s/.test(response);
+    assert.ok(
+      hasNumberedItems,
+      `List response should contain numbered items or bullet points, got: "${response.slice(0, 100)}"`,
+    );
+  } else if (command.includes('summarize') || command.includes('summary')) {
+    // For summarize commands, check minimum length
+    assert.ok(
+      response.length >= 100,
+      `Summary response should be at least 100 characters, got ${response.length}`,
+    );
+  } else if (command.includes('explain') || command.includes('define')) {
+    // For explain/define commands, check for substantive explanation
+    assert.ok(
+      response.length >= 80,
+      `Explanation response should be at least 80 characters, got ${response.length}`,
+    );
+    const result = this.validator.validateAll(response, {
+      structural: { completeSentence: true },
+    });
+    assert.ok(
+      result.passed,
+      `Explanation should contain complete sentences: ${result.results.map((r) => r.message).join('; ')}`,
+    );
+  } else {
+    // Generic: just verify it's substantive
+    assert.ok(
+      response.length >= 50,
+      `Command response should be substantive (at least 50 chars), got ${response.length}`,
+    );
+  }
+});
+
+/**
+ * Validates that the response is not a refusal.
+ * Checks against refusalPatterns to ensure the chatbot actually answers.
+ */
+Then('the response should not be a refusal', async function (this: CustomWorld) {
+  const result = this.validator.validateAll(this.lastResponse, {
+    negativePatterns: {
+      patterns: [...NEGATIVE_PATTERNS.refusalPatterns],
+    },
+  });
+  assert.ok(
+    result.passed,
+    `Response should not be a refusal: ${result.results.map((r) => r.message).join('; ')}`,
+  );
+});
 
 // --- Sentiment/Opinion (Requirement 4.4) ---
 
