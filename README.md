@@ -1,185 +1,116 @@
-# AI Chatbot Playwright Test Suite
+# AI Chatbot Test Suite
 
-A comprehensive Playwright-based BDD automation test suite for the AI chatbot demo at [chatbot.ai-sdk.dev/demo](https://chatbot.ai-sdk.dev/demo). This project demonstrates professional QA engineering skills covering conversational functionality, intent recognition, hallucination detection, and tone/persona validation using a layered assertion strategy designed for non-deterministic AI responses.
+End-to-end test suite for an AI chatbot using Playwright and Cucumber. I built this to solve a problem I kept running into: how do you write reliable automated tests for something that gives you a different answer every time?
+
+The target is the [Vercel AI SDK chatbot demo](https://chatbot.ai-sdk.dev/demo). Tests run in a real browser, send real messages, and validate the responses — but instead of checking exact text (which would break constantly), I use a layered validation approach that checks *properties* of the response.
+
+## The Problem
+
+Traditional test assertions don't work with AI chatbots:
+
+```
+// This breaks on the next run
+expect(response).toBe("Hello! How can I help you today?")
+```
+
+The chatbot might say "Hi there! What can I do for you?" instead. Both are valid. So I needed a way to assert on *what kind of response* came back without caring about the exact words.
+
+## My Solution: Layered Validation
+
+Each response gets checked through up to 4 layers:
+
+- **Structural** — Is it non-empty? Long enough? Has complete sentences?
+- **Keywords** — Does it contain at least one word from a set of acceptable terms?
+- **Negative patterns** — Does it *not* contain things it shouldn't? (profanity, HTML artifacts, overclaiming capabilities)
+- **Semantic** — Is the *meaning* close enough to what we expected? (TF-IDF cosine similarity)
+
+All specified layers must pass. If any fails, you get a clear message saying which layer failed and why.
+
+## What's Tested
+
+Five feature files covering different aspects of chatbot behavior:
+
+- **Conversational** — greetings, follow-ups, empty input, special characters, long messages
+- **Intent recognition** — factual questions, help requests, commands, sentiment, ambiguous input
+- **Hallucination detection** — false premises, fake entities, capability overclaiming, verifiable facts
+- **Tone & persona** — stays professional under provocation, resists persona adoption requests
+- **Reliability** — timeout handling, exponential backoff retry, rate limit mitigation
+
+56 scenarios total, all written in Gherkin so you can read them without knowing TypeScript.
 
 ## Tech Stack
 
-- **Playwright** — Browser automation (Chromium)
-- **Cucumber.js** — BDD framework with Gherkin syntax
-- **TypeScript** — Type-safe implementation
-- **fast-check** — Property-based testing
-- **vitest** — Unit and property test runner
-- **natural** — NLP-based semantic similarity scoring
-- **Allure** — Test reporting with history tracking
+| Tool | Why |
+|------|-----|
+| Playwright | Browser automation, Chromium only |
+| Cucumber.js | BDD with Gherkin syntax — tests read like specs |
+| TypeScript | Type safety across the whole project |
+| fast-check | Property-based testing for the validators |
+| vitest | Unit and property test runner |
+| natural | NLP library for semantic similarity (no API calls) |
+| Allure | HTML test reports with screenshots on failure |
 
-## Prerequisites
-
-- **Node.js** >= 18.0.0
-- **npm** (included with Node.js)
-
-## Setup
-
-1. Clone the repository:
+## Running It
 
 ```bash
-git clone <repository-url>
-cd ai-chatbot-testing
-```
-
-2. Install dependencies:
-
-```bash
+# Setup
 npm install
-```
-
-3. Install Playwright Chromium browser:
-
-```bash
 npx playwright install chromium
-```
 
-4. (Optional) Copy the environment file and adjust values:
-
-```bash
-cp .env.example .env
-```
-
-## Test Execution
-
-### Local
-
-```bash
-# Run BDD scenarios (Cucumber + Playwright)
+# Run the BDD scenarios against the live chatbot
 npm run test
 
-# Run property-based tests (fast-check via vitest)
+# Run just the unit/property tests (no browser needed)
 npm run test:properties
-
-# Run unit tests (vitest)
 npm run test:unit
 
-# Run all tests (format-check → properties → unit → BDD → report)
+# Full CI pipeline locally
 npm run test:ci
 
-# Generate Allure HTML report
+# Generate the Allure report after a test run
 npm run report
+```
 
-# Run a specific feature by tag
+You can also run specific features by tag:
+```bash
+npm run test -- --tags @hallucination
 npm run test -- --tags @conversational
 ```
 
-### CI
-
-Tests run automatically via GitHub Actions on:
-- Push to `main` branch
-- Pull requests targeting `main` (opened, synchronized, reopened)
-
-The CI pipeline uses environment variables for tuning (e.g., higher inter-scenario delay). See the CI/CD Pipeline section below for details.
-
-## Directory Structure
+## Project Structure
 
 ```
-ai-chatbot-testing/
-├── .github/
-│   └── workflows/
-│       └── test.yml                 # GitHub Actions CI pipeline
-├── src/
-│   ├── features/                    # Gherkin feature files (BDD scenarios)
-│   │   ├── conversational.feature
-│   │   ├── intent-recognition.feature
-│   │   ├── hallucination-detection.feature
-│   │   ├── tone-persona.feature
-│   │   └── reliability.feature
-│   ├── step-definitions/            # Cucumber step implementations
-│   │   ├── conversational.steps.ts
-│   │   ├── intent-recognition.steps.ts
-│   │   ├── hallucination-detection.steps.ts
-│   │   ├── tone-persona.steps.ts
-│   │   └── reliability.steps.ts
-│   ├── page-objects/                # Page Object Model classes
-│   │   └── chatbot.page.ts
-│   ├── support/                     # Hooks, world, config, retry
-│   │   ├── world.ts                 # Custom Cucumber World with Playwright
-│   │   ├── hooks.ts                 # Before/After hooks for browser lifecycle
-│   │   ├── config.ts                # Test configuration and env vars
-│   │   └── retry.ts                 # Exponential backoff utility
-│   └── validators/                  # Response validation utilities
-│       ├── response-validator.ts    # Main validator orchestrator
-│       ├── semantic-validator.ts    # NLP-based semantic similarity
-│       ├── keyword-validator.ts     # Keyword set matching
-│       ├── negative-pattern-validator.ts  # Forbidden pattern checks
-│       ├── structural-validator.ts  # Structure/format assertions
-│       ├── constants.ts             # Predefined keyword sets & patterns
-│       └── types.ts                 # Shared validation types
-├── playwright.config.ts             # Playwright configuration
-├── cucumber.js                      # Cucumber configuration
-├── vitest.config.ts                 # Vitest configuration
-├── tsconfig.json                    # TypeScript configuration
-├── package.json                     # Dependencies and scripts
-├── .eslintrc.json                   # ESLint rules
-├── .prettierrc                      # Prettier formatting rules
-├── .gitignore                       # Git ignore rules
-├── .env.example                     # Environment variable template
-└── README.md
+src/
+├── features/           # Gherkin scenarios (.feature files)
+├── step-definitions/   # Maps Gherkin steps → Playwright actions
+├── page-objects/       # ChatbotPage — all UI interaction in one place
+├── support/            # Cucumber world, hooks, config, retry utility
+└── validators/         # The layered validation engine
 ```
 
-## CI/CD Pipeline
+The Page Object handles the tricky part of detecting when a streamed response is "done" — it polls every 200ms and considers the response complete when the text hasn't changed for 1 second.
 
-The GitHub Actions workflow (`.github/workflows/test.yml`) provides continuous quality validation.
+## Rate Limiting
 
-### Triggers
+The live demo has Vercel Firewall rate limiting. I handle this with:
+- A delay between scenarios (2s locally, 3s in CI)
+- Exponential backoff retry (2s → 4s → 8s) when throttling is detected
 
-- **Push** to `main` branch
-- **Pull request** events (opened, synchronize, reopened) targeting `main`
+This means tests occasionally take longer but don't flake out from 429s.
 
-### Pipeline Stages
+## CI/CD
 
-1. **Checkout** — Clone repository
-2. **Setup Node.js** — Install Node.js 18+
-3. **Install dependencies** — `npm ci`
-4. **Install Playwright** — `npx playwright install chromium`
-5. **Format check** — Fail fast on style violations (`npm run format-check`)
-6. **Property-based tests** — Validate correctness properties (no network needed)
-7. **Unit tests** — Validate individual components (no network needed)
-8. **BDD scenarios** — Full integration tests against the live chatbot demo
-9. **Generate Allure report** — Produce HTML test report
-10. **Upload artifacts** — Allure report and failure screenshots (30-day retention)
+GitHub Actions runs on every push and PR:
+1. Format check (Prettier)
+2. Property-based tests
+3. Unit tests
+4. BDD scenarios against the live demo
+5. Allure report generation
 
-### Environment Variables (CI)
+Screenshots from failures get uploaded as artifacts. The workflow has a 15-minute timeout.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `BASE_URL` | `https://chatbot.ai-sdk.dev/demo` | Chatbot demo URL |
-| `INTER_SCENARIO_DELAY` | `3000` | Delay between scenarios (ms) |
-| `RETRY_ATTEMPTS` | `3` | Max retry attempts on failure |
-| `BACKOFF_MULTIPLIER` | `2` | Exponential backoff multiplier |
-| `SEMANTIC_THRESHOLD` | `0.7` | NLP similarity pass threshold |
+## Things I'd Do Differently
 
-The workflow has a 15-minute timeout and marks the run as failed if any test step fails.
-
-## Known Constraints
-
-### Rate Limiting
-
-The live chatbot demo at `chatbot.ai-sdk.dev` is protected by Vercel Firewall rate limiting on `/api/chat` endpoints. This can cause intermittent test failures when requests are throttled.
-
-**Mitigation strategies:**
-- **Inter-scenario delay** — A configurable pause (default 2s locally, 3s in CI) between scenarios reduces request density
-- **Exponential backoff** — On rate limit detection (HTTP 429 or "rate limit" text in responses), the retry utility waits 2s → 4s → 8s before retrying, up to 3 attempts
-- **Logging** — When throttling is detected, it is logged as a known constraint in test output
-
-### Non-Deterministic Assertion Strategy
-
-AI chatbot responses are inherently non-deterministic. The same input can produce different valid responses across runs. Traditional exact-match assertions are unsuitable.
-
-**Layered validation approach:**
-1. **Structural assertions** — Verify response properties (non-empty, length bounds, complete sentences) without checking specific content
-2. **Keyword matching** — Check that the response contains at least one word from a predefined set of acceptable terms (case-insensitive)
-3. **Negative pattern exclusion** — Verify that forbidden words, phrases, or regex patterns do NOT appear in the response
-4. **Semantic similarity** — Use NLP (TF-IDF + cosine similarity via the `natural` library) to compare response meaning against expected intent, with a configurable threshold (default 0.7)
-
-All specified layers must pass for a validation to succeed. Each layer returns independent results with descriptive failure messages to aid debugging. This approach provides reliable pass/fail signals without brittle coupling to specific response text.
-
-## License
-
-This project is a portfolio demonstration and is not licensed for production use.
+- The semantic validator works but TF-IDF cosine similarity is pretty basic. A proper embedding model would be more accurate, but I wanted zero external API dependencies.
+- Some scenarios are inherently flaky because the chatbot's behavior changes with model updates. The layered validation helps, but it's not bulletproof.
+- I'd add visual regression testing for the chat UI itself if this were a real product.
