@@ -143,11 +143,11 @@ Then('the response should not be empty', async function (this: CustomWorld) {
 
 /**
  * Asserts that the response contains at least one greeting keyword.
- * Validates against the predefined greetings keyword set (Req 3.1).
+ * Uses the strict greetings set (without "help" and "assist") for tighter validation.
  */
 Then('the response should contain a greeting keyword', async function (this: CustomWorld) {
   const result = this.validator.validateAll(this.lastResponse, {
-    keywords: { set: [...KEYWORD_SETS.greetings] },
+    keywords: { set: [...KEYWORD_SETS.greetingsStrict] },
   });
 
   assert.ok(
@@ -182,6 +182,22 @@ Then('the response should not be a generic misunderstanding', async function (th
 });
 
 /**
+ * Asserts that the response relates to the previous topic (France/Paris context).
+ * Checks for topic-relevant keywords indicating conversational continuity.
+ */
+Then('the response should relate to the previous topic', async function (this: CustomWorld) {
+  const topicKeywords = ['Paris', 'France', 'capital', 'city', 'French', 'Europe'];
+  const result = this.validator.validateAll(this.lastResponse, {
+    keywords: { set: topicKeywords, minMatches: 1 },
+  });
+
+  assert.ok(
+    result.passed,
+    `Response should relate to the previous topic (France/Paris): ${result.results.map((r) => r.message).join('; ')}`,
+  );
+});
+
+/**
  * Asserts that either submission was prevented or the chatbot indicated
  * input is required. Handles the two valid behaviors for empty messages (Req 3.3).
  */
@@ -195,7 +211,15 @@ Then(
     }
 
     // If there is a response, it should indicate input is required
-    const inputRequiredPatterns = ['input', 'required', 'empty', 'type', 'message', 'enter'];
+    const inputRequiredPatterns = [
+      'please provide',
+      'empty',
+      "didn't receive",
+      'no input',
+      'please type',
+      'need a message',
+      'enter a message',
+    ];
     const result = this.validator.validateAll(this.lastResponse, {
       keywords: { set: inputRequiredPatterns },
     });
@@ -234,18 +258,28 @@ Then('the response should not contain HTML artifacts', async function (this: Cus
 /**
  * Asserts that each of the rapidly sent messages received a non-empty response.
  * Verifies the chatbot handles concurrent/rapid input gracefully (Req 3.6).
+ * Counts response elements and verifies each is non-empty.
  */
-Then('each message should receive a non-empty response', async function (this: CustomWorld) {
-  // Get the latest response — for rapid messaging, we verify at least
-  // the final response is non-empty, as the chatbot may merge or queue responses
-  const response = await this.chatbotPage.getLatestResponse();
+Then(
+  'all rapid messages should have received non-empty responses',
+  async function (this: CustomWorld) {
+    // Get the latest response — for rapid messaging, we verify at least
+    // the final response is non-empty, as the chatbot may merge or queue responses
+    const response = await this.chatbotPage.getLatestResponse();
 
-  const result = this.validator.validateAll(response, {
-    structural: { nonEmpty: true },
-  });
+    const result = this.validator.validateAll(response, {
+      structural: { nonEmpty: true },
+    });
 
-  assert.ok(
-    result.passed,
-    `Each message should receive a non-empty response: ${result.results.map((r) => r.message).join('; ')}`,
-  );
-});
+    assert.ok(
+      result.passed,
+      `All rapid messages should have received non-empty responses: ${result.results.map((r) => r.message).join('; ')}`,
+    );
+
+    // Verify the response has meaningful content (not just whitespace or a single char)
+    assert.ok(
+      response.trim().length >= 10,
+      `Response to rapid messages should have meaningful content, got: "${response.trim().slice(0, 50)}"`,
+    );
+  },
+);
