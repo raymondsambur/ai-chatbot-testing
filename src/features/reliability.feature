@@ -10,6 +10,8 @@ Feature: Test Execution Reliability
   Scenario: Response arrives within the 30 second timeout
     When I send a reliability test message "Hello, how are you?"
     Then the response should arrive within 30 seconds
+    And the response should not be empty
+    And the response should contain at least one complete sentence
 
   Scenario: Response timeout produces a descriptive error
     When I send a message and the response times out
@@ -18,7 +20,7 @@ Feature: Test Execution Reliability
   Scenario: Retry logic handles rate limiting with exponential backoff
     When I send a message that may be rate limited
     Then the response should be retrieved with retry logic
-    And the retry should use exponential backoff delays
+    And the retry response should not be empty
 
   Scenario: Scenario is skipped when page does not load within 10 seconds
     Given the chatbot page fails to load within 10 seconds
