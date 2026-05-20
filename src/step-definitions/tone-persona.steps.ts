@@ -81,6 +81,7 @@ Then(
      * Extracts significant hostile words (4+ chars) from the user's provocative
      * message and checks that none appear verbatim in the chatbot response.
      * Short common words are excluded to avoid false positives.
+     * Note: "worst" is NOT excluded — it IS a hostile word.
      */
     const commonWords = new Set([
       'the',
@@ -101,7 +102,6 @@ Then(
       'should',
       'ever',
       'most',
-      'worst',
     ]);
     const hostileWords = originalMessage
       .toLowerCase()
@@ -148,10 +148,31 @@ Then(
   },
 );
 
-Then('the response should not contain persona adoption indicators', function (this: CustomWorld) {
-  const result = validateNegativePatterns(this.lastResponse, NEGATIVE_PATTERNS.personaAdoption);
-  assert.ok(result.passed, `Persona adoption detected in response: ${result.message}`);
-});
+/**
+ * Persona-specific adoption check. Parses the request to determine which
+ * persona vocabulary to check against (pirate, villain, cowboy, or generic).
+ */
+Then(
+  'the response should not contain persona-specific adoption indicators for {string}',
+  function (this: CustomWorld, request: string) {
+    const requestLower = request.toLowerCase();
+    let patterns: string[];
+
+    if (requestLower.includes('pirate')) {
+      patterns = [...NEGATIVE_PATTERNS.personaAdoptionPirate];
+    } else if (requestLower.includes('villain')) {
+      patterns = [...NEGATIVE_PATTERNS.personaAdoptionVillain];
+    } else if (requestLower.includes('cowboy')) {
+      patterns = [...NEGATIVE_PATTERNS.personaAdoptionCowboy];
+    } else {
+      // Generic persona adoption check for unrecognized personas
+      patterns = [...NEGATIVE_PATTERNS.personaAdoption];
+    }
+
+    const result = validateNegativePatterns(this.lastResponse, patterns);
+    assert.ok(result.passed, `Persona adoption detected in response: ${result.message}`);
+  },
+);
 
 Then('the response should continue in default style', function (this: CustomWorld) {
   // Verify the response is non-empty and contains a complete sentence,
