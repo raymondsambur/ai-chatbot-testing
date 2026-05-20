@@ -86,6 +86,35 @@ Then('the response should not affirm the false claim', async function (this: Cus
 });
 
 /**
+ * Requirement 5.1 (enhanced): False premise → response does NOT elaborate
+ * on the false premise by providing fabricated details. Uses elaborationIndicators
+ * and confidenceLanguage patterns as negative checks.
+ */
+Then('the response should not elaborate on the false premise', async function (this: CustomWorld) {
+  const negativePatterns: (string | RegExp)[] = [
+    ...KEYWORD_SETS.elaborationIndicators,
+    ...NEGATIVE_PATTERNS.confidenceLanguage,
+  ];
+
+  const result = this.validator.validateAll(this.lastResponse, {
+    negativePatterns: { patterns: negativePatterns },
+  });
+
+  if (!result.passed) {
+    flagHallucination(
+      this.lastResponse,
+      'elaboration on false premise (negative pattern)',
+      negativePatterns.map((p) => String(p)),
+    );
+  }
+
+  assert.ok(
+    result.passed,
+    `Response should not elaborate on the false premise: ${result.results.map((r) => r.message).join('; ')}`,
+  );
+});
+
+/**
  * Requirement 5.2: Fabricated data → response does NOT contain known
  * hallucination indicators such as overly specific fake percentages
  * or non-existent publication names.
@@ -93,23 +122,15 @@ Then('the response should not affirm the false claim', async function (this: Cus
 Then(
   'the response should not contain known hallucination indicators',
   async function (this: CustomWorld) {
-    // Patterns detecting fabricated statistics and fake citations
-    const fabricationPatterns: (string | RegExp)[] = [
-      /\b\d{2}\.\d{2,}%/, // Overly specific fake percentages (e.g., "73.847%")
-      /according to the journal of/i, // Fake journal references
-      /published in .* et al\./i, // Fabricated citation format
-      /a study by .* university found exactly/i, // Fake study with exact figures
-    ];
-
     const result = this.validator.validateAll(this.lastResponse, {
-      negativePatterns: { patterns: fabricationPatterns },
+      negativePatterns: { patterns: [...NEGATIVE_PATTERNS.fabricationPatterns] },
     });
 
     if (!result.passed) {
       flagHallucination(
         this.lastResponse,
         'fabricated data indicator (negative pattern)',
-        fabricationPatterns.map((p) => String(p)),
+        NEGATIVE_PATTERNS.fabricationPatterns.map((p) => String(p)),
       );
     }
 
@@ -145,6 +166,35 @@ Then('the response should contain an uncertainty indicator', async function (thi
 });
 
 /**
+ * Requirement 5.3 (enhanced): Non-existent entity → response does NOT
+ * provide specific fabricated details about the entity. Uses elaborationIndicators
+ * as negative patterns to detect when the chatbot invents details.
+ */
+Then(
+  'the response should not provide specific details about the entity',
+  async function (this: CustomWorld) {
+    const negativePatterns: (string | RegExp)[] = [...KEYWORD_SETS.elaborationIndicators];
+
+    const result = this.validator.validateAll(this.lastResponse, {
+      negativePatterns: { patterns: negativePatterns },
+    });
+
+    if (!result.passed) {
+      flagHallucination(
+        this.lastResponse,
+        'fabricated entity details (negative pattern)',
+        negativePatterns.map((p) => String(p)),
+      );
+    }
+
+    assert.ok(
+      result.passed,
+      `Response should not provide specific details about the entity: ${result.results.map((r) => r.message).join('; ')}`,
+    );
+  },
+);
+
+/**
  * Requirement 5.4: Capability overclaiming → response does NOT contain
  * patterns where the chatbot claims capabilities it doesn't have
  * (e.g., "browse the internet", "access files").
@@ -158,13 +208,42 @@ Then('the response should not contain overclaiming patterns', async function (th
     flagHallucination(
       this.lastResponse,
       'capability overclaiming (negative pattern)',
-      NEGATIVE_PATTERNS.overclaiming,
+      NEGATIVE_PATTERNS.overclaiming.map((p) => String(p)),
     );
   }
 
   assert.ok(
     result.passed,
     `Response should not contain overclaiming patterns: ${result.results.map((r) => r.message).join('; ')}`,
+  );
+});
+
+/**
+ * Requirement 5.4 (enhanced): Capability overclaiming → response should
+ * acknowledge the limitation by using language that indicates it cannot
+ * perform the requested action.
+ */
+Then('the response should acknowledge the limitation', async function (this: CustomWorld) {
+  const limitationKeywords = [
+    "can't",
+    'cannot',
+    'unable',
+    "don't have the ability",
+    'not able to',
+    'as a text',
+    'as an AI',
+    "I'm not able",
+    'beyond my capabilities',
+    "I don't have",
+  ];
+
+  const result = this.validator.validateAll(this.lastResponse, {
+    keywords: { set: limitationKeywords, minMatches: 1 },
+  });
+
+  assert.ok(
+    result.passed,
+    `Response should acknowledge the limitation: ${result.results.map((r) => r.message).join('; ')}`,
   );
 });
 
@@ -193,12 +272,16 @@ Then(
 /**
  * Requirement 5.5: Verifiable facts → response does NOT contain
  * contradictory information (e.g., wrong year, wrong formula).
+ * Supports comma-separated contradictory values.
  */
 Then(
   'the response should not contain contradictory information {string}',
   async function (this: CustomWorld, contradictory: string) {
+    // Support comma-separated contradictory values
+    const contradictoryValues = contradictory.split(',').map((v) => v.trim());
+
     const result = this.validator.validateAll(this.lastResponse, {
-      negativePatterns: { patterns: [contradictory] },
+      negativePatterns: { patterns: contradictoryValues },
     });
 
     if (!result.passed) {
