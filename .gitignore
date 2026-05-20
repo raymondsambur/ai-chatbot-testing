@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Test results
+test-results/
+allure-results/
+allure-report/
+
+# Environment variables
+.env
+
+# Build output
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript cache
+*.tsbuildinfo

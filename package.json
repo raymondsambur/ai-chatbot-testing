@@ -1,0 +1,36 @@
+{
+  "name": "ai-chatbot-testing",
+  "version": "1.0.0",
+  "description": "Playwright-based BDD automation test suite for AI chatbot demo",
+  "private": true,
+  "scripts": {
+    "test": "cucumber-js",
+    "test:properties": "vitest run --config vitest.config.ts .property.test.ts",
+    "test:unit": "vitest run --config vitest.config.ts .test.ts --exclude \"**/*.property.test.ts\"",
+    "test:ci": "npm run format-check && npm run test:properties && npm run test:unit && npm run test && npm run report",
+    "prereport": "ts-node scripts/generate-allure-env.ts",
+    "report": "npm run prereport && allure generate allure-results --clean -o allure-report",
+    "format-check": "prettier --check \"src/**/*.ts\" \"*.ts\" \"*.json\" \"*.js\""
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "10.3.1",
+    "allure-cucumberjs": "2.15.1",
+    "natural": "6.12.0",
+    "playwright": "1.49.1"
+  },
+  "devDependencies": {
+    "@types/natural": "5.1.5",
+    "@types/node": "20.11.5",
+    "@typescript-eslint/eslint-plugin": "6.19.1",
+    "@typescript-eslint/parser": "6.19.1",
+    "eslint": "8.56.0",
+    "fast-check": "3.15.0",
+    "prettier": "3.2.4",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3",
+    "vitest": "1.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
