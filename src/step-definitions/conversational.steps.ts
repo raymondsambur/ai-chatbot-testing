@@ -258,28 +258,30 @@ Then('the response should not contain HTML artifacts', async function (this: Cus
 /**
  * Asserts that each of the rapidly sent messages received a non-empty response.
  * Verifies the chatbot handles concurrent/rapid input gracefully (Req 3.6).
- * Counts response elements and verifies each is non-empty.
+ * Counts all assistant response elements in the DOM and verifies each is non-empty.
  */
 Then(
   'all rapid messages should have received non-empty responses',
   async function (this: CustomWorld) {
-    // Get the latest response — for rapid messaging, we verify at least
-    // the final response is non-empty, as the chatbot may merge or queue responses
-    const response = await this.chatbotPage.getLatestResponse();
+    // Count all assistant response elements in the DOM
+    const responseElements = this.page.locator('[data-role="assistant"]');
+    const responseCount = await responseElements.count();
 
-    const result = this.validator.validateAll(response, {
-      structural: { nonEmpty: true },
-    });
-
+    // Verify there are at least 3 response elements (one per rapid message)
     assert.ok(
-      result.passed,
-      `All rapid messages should have received non-empty responses: ${result.results.map((r) => r.message).join('; ')}`,
+      responseCount >= 3,
+      `Expected at least 3 assistant response elements for 3 rapid messages, but found ${responseCount}`,
     );
 
-    // Verify the response has meaningful content (not just whitespace or a single char)
-    assert.ok(
-      response.trim().length >= 10,
-      `Response to rapid messages should have meaningful content, got: "${response.trim().slice(0, 50)}"`,
-    );
+    // Verify each response element has non-empty text content
+    for (let i = 0; i < responseCount; i++) {
+      const text = await responseElements.nth(i).textContent();
+      const trimmedText = text?.trim() ?? '';
+
+      assert.ok(
+        trimmedText.length > 0,
+        `Response element ${i + 1} of ${responseCount} should not be empty`,
+      );
+    }
   },
 );

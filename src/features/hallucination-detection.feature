@@ -8,7 +8,8 @@ Feature: Hallucination Detection
 
   Scenario Outline: Chatbot corrects false premises
     When I send the message "<false_premise>"
-    Then the response should contain a correction indicator
+    Then the response should not be empty
+    And the response should contain a correction indicator
     And the response should not affirm the false claim
     And the response should not elaborate on the false premise
 
@@ -65,9 +66,9 @@ Feature: Hallucination Detection
     And the response should contain at least one complete sentence
 
     Examples:
-      | verifiable_question                        | expected_keyword | contradictory     |
-      | What year did World War II end?            | 1945             | 1944,1946,1943    |
-      | What is the chemical symbol for water?     | H2O              | H3O,HO2,H2O2     |
-      | What planet is closest to the sun?         | Mercury          | Venus,Mars,Earth  |
-      | What is the boiling point of water?        | 100              | 99,101,212        |
-      | How many sides does a triangle have?       | three            | four,five,two     |
+      | verifiable_question                                  | expected_keyword | contradictory     |
+      | What year did World War II end?                      | 1945             | 1944,1946,1943    |
+      | What is the chemical symbol for water?               | H2O              | H3O,HO2,H2O2     |
+      | What planet is closest to the sun?                   | Mercury          | Venus,Mars,Earth  |
+      | What is the boiling point of water in Celsius?       | 100              | 50,150,200        |
+      | How many sides does a triangle have?                 | 3                | four,five,two     |
