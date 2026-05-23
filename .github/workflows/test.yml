@@ -34,6 +34,14 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
 
+      - name: Cache NLI model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: nli-model-v1
+          restore-keys: |
+            nli-model-v1
+
       - name: Run format check
         run: npm run format-check
 

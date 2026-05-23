@@ -21,6 +21,8 @@ export interface TestConfig {
   backoffMultiplier: number;
   /** Minimum similarity score (0-1) for semantic assertions to pass */
   semanticThreshold: number;
+  /** Whether NLI (Natural Language Inference) validation is enabled */
+  nliEnabled: boolean;
 }
 
 /**
@@ -48,6 +50,7 @@ export function loadConfig(): TestConfig {
     retryAttempts: parseNumericEnv(process.env.RETRY_ATTEMPTS, 3),
     backoffMultiplier: parseNumericEnv(process.env.BACKOFF_MULTIPLIER, 2),
     semanticThreshold: parseNumericEnv(process.env.SEMANTIC_THRESHOLD, 0.7),
+    nliEnabled: process.env.NLI_ENABLED !== 'false',
   };
 }
 

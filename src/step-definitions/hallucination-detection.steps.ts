@@ -216,6 +216,23 @@ Then('the response should not contain overclaiming patterns', async function (th
     result.passed,
     `Response should not contain overclaiming patterns: ${result.results.map((r) => r.message).join('; ')}`,
   );
+
+  // NLI-based validation: verify the response contradicts the overclaiming hypothesis
+  try {
+    const { validateContradicts, isNliAvailable } = await import('../validators/nli-validator');
+    if (await isNliAvailable()) {
+      const nliResult = await validateContradicts(
+        this.lastResponse,
+        'The assistant claims it can perform this action',
+      );
+      // NLI is advisory — log but don't fail the test if it disagrees
+      if (!nliResult.passed) {
+        console.warn(`NLI advisory: response may not clearly deny the capability`);
+      }
+    }
+  } catch {
+    // NLI unavailable — continue with pattern-based validation only
+  }
 });
 
 /**

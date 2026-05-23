@@ -21,6 +21,7 @@ describe('loadConfig', () => {
     delete process.env.RETRY_ATTEMPTS;
     delete process.env.BACKOFF_MULTIPLIER;
     delete process.env.SEMANTIC_THRESHOLD;
+    delete process.env.NLI_ENABLED;
 
     const cfg: TestConfig = loadConfig();
 
@@ -32,6 +33,7 @@ describe('loadConfig', () => {
     expect(cfg.retryAttempts).toBe(3);
     expect(cfg.backoffMultiplier).toBe(2);
     expect(cfg.semanticThreshold).toBe(0.7);
+    expect(cfg.nliEnabled).toBe(true);
   });
 
   it('reads values from environment variables', () => {
@@ -43,6 +45,7 @@ describe('loadConfig', () => {
     process.env.RETRY_ATTEMPTS = '5';
     process.env.BACKOFF_MULTIPLIER = '3';
     process.env.SEMANTIC_THRESHOLD = '0.8';
+    process.env.NLI_ENABLED = 'false';
 
     const cfg = loadConfig();
 
@@ -54,6 +57,7 @@ describe('loadConfig', () => {
     expect(cfg.retryAttempts).toBe(5);
     expect(cfg.backoffMultiplier).toBe(3);
     expect(cfg.semanticThreshold).toBe(0.8);
+    expect(cfg.nliEnabled).toBe(false);
   });
 
   it('falls back to defaults for invalid numeric values', () => {

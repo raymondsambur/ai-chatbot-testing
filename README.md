@@ -17,16 +17,17 @@ The chatbot might say "Hi there! What can I do for you?" instead. Both are valid
 
 ## My Solution: Layered Validation
 
-Each response gets checked through up to 4 layers:
+Each response gets checked through up to 5 layers:
 
 - **Structural** — Is it non-empty? Long enough? Has complete sentences? Starts with a capital letter?
 - **Keywords** — Does it contain at least one word from a set of acceptable terms? (scenario-specific, not generic)
 - **Negative patterns** — Does it *not* contain things it shouldn't? (profanity, HTML artifacts, overclaiming, fabricated details, persona vocabulary)
 - **Semantic** — Is the *meaning* close enough to what we expected? (TF-IDF cosine similarity)
+- **NLI (optional)** — Does the response *entail* or *contradict* a hypothesis? Uses a local transformer model (MobileBERT MNLI via ONNX) for Natural Language Inference — no API calls needed. Currently advisory (logs warnings but doesn't fail tests) while accuracy is evaluated.
 
 All specified layers must pass. If any fails, you get a clear message saying which layer failed and why.
 
-Most scenarios use 3-4 layers simultaneously. For example, the hallucination detection scenarios check that the response contains correction language (keywords), doesn't affirm the false premise (negative patterns), doesn't elaborate with fabricated details (negative patterns), and forms complete sentences (structural). A response has to pass all of them.
+Most scenarios use 3-4 layers simultaneously. For example, the hallucination detection scenarios check that the response contains correction language (keywords), doesn't affirm the false premise (negative patterns), doesn't elaborate with fabricated details (negative patterns), and forms complete sentences (structural). A response has to pass all of them. The NLI layer adds an additional semantic check — verifying that the response logically contradicts overclaiming hypotheses — but runs in advisory mode so it doesn't block tests while its accuracy is being evaluated.
 
 ## What's Tested
 
@@ -50,6 +51,7 @@ Five feature files covering different aspects of chatbot behavior:
 | fast-check | Property-based testing for the validators |
 | vitest | Unit and property test runner |
 | natural | NLP library for semantic similarity (no API calls) |
+| @xenova/transformers | Local ONNX transformer models for NLI classification (no API calls) |
 | Allure | HTML test reports with screenshots on failure |
 
 ## Running It
