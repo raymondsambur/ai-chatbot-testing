@@ -22,11 +22,6 @@ import {
  */
 let collectedResponses: string[] = [];
 
-/**
- * Note: The "the chatbot is loaded" Given step is defined in
- * conversational.steps.ts and shared across all feature files.
- */
-
 When(
   'the user sends a casual message {string}',
   async function (this: CustomWorld, message: string) {

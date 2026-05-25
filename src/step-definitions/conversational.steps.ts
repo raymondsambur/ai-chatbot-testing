@@ -87,7 +87,7 @@ When('I attempt to send an empty message', async function (this: CustomWorld) {
 
 /**
  * Generates and sends a message of the specified character length.
- * Used to test handling of long messages (501-1000 chars per Req 3.5).
+ * Used to test handling of long messages (501-1000 chars).
  */
 When('I send a message of {int} characters', async function (this: CustomWorld, charCount: number) {
   // Generate a readable long message by repeating a phrase
@@ -102,7 +102,7 @@ When('I send a message of {int} characters', async function (this: CustomWorld, 
 
 /**
  * Sends multiple messages rapidly without waiting for responses between them.
- * Tests the chatbot's ability to handle rapid sequential input (Req 3.6).
+ * Tests the chatbot's ability to handle rapid sequential input.
  */
 When(
   'I send {int} messages rapidly within {int} seconds',
@@ -159,7 +159,7 @@ Then('the response should contain a greeting keyword', async function (this: Cus
 /**
  * Asserts that the response is not a generic misunderstanding reply.
  * Checks that the response doesn't match "I don't understand" or
- * "could you rephrase" patterns, indicating contextual awareness (Req 3.2).
+ * "could you rephrase" patterns, indicating contextual awareness.
  */
 Then('the response should not be a generic misunderstanding', async function (this: CustomWorld) {
   const misunderstandingPatterns: (string | RegExp)[] = [
@@ -199,7 +199,7 @@ Then('the response should relate to the previous topic', async function (this: C
 
 /**
  * Asserts that either submission was prevented or the chatbot indicated
- * input is required. Handles the two valid behaviors for empty messages (Req 3.3).
+ * input is required. Handles the two valid behaviors for empty messages.
  */
 Then(
   'the chatbot should either prevent submission or indicate input is required',
@@ -233,7 +233,7 @@ Then(
 
 /**
  * Asserts that the chat input remains interactive after the empty message test.
- * Ensures the user can continue sending messages (Req 3.3).
+ * Ensures the user can continue sending messages.
  */
 Then('the chat input should remain interactive', async function (this: CustomWorld) {
   const isInteractive = await this.chatbotPage.isChatInputInteractive();
@@ -242,7 +242,7 @@ Then('the chat input should remain interactive', async function (this: CustomWor
 
 /**
  * Asserts that the response does not contain raw HTML markup or rendering
- * artifacts. Uses the predefined htmlArtifacts negative patterns (Req 3.4).
+ * artifacts. Uses the predefined htmlArtifacts negative patterns.
  */
 Then('the response should not contain HTML artifacts', async function (this: CustomWorld) {
   const result = this.validator.validateAll(this.lastResponse, {
@@ -257,7 +257,7 @@ Then('the response should not contain HTML artifacts', async function (this: Cus
 
 /**
  * Asserts that each of the rapidly sent messages received a non-empty response.
- * Verifies the chatbot handles concurrent/rapid input gracefully (Req 3.6).
+ * Verifies the chatbot handles concurrent/rapid input gracefully.
  * Counts all assistant response elements in the DOM and verifies each is non-empty.
  */
 Then(

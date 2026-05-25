@@ -8,7 +8,7 @@
  *   browser context, and apply an inter-scenario delay to mitigate rate limiting.
  *
  * If the initial page load exceeds 10 seconds, the scenario is skipped with
- * a "service unavailable" message (Requirement 11.6).
+ * a "service unavailable" message.
  */
 
 import { Before, After, BeforeAll, AfterAll, Status } from '@cucumber/cucumber';
@@ -44,7 +44,7 @@ AfterAll(async function () {
  * 5. Wait for the page to load within 10 seconds.
  *
  * If navigation times out (>10s), the scenario is skipped with a
- * "service unavailable" message per Requirement 11.6.
+ * "service unavailable" message.
  */
 Before(async function () {
   this.context = await browser.newContext();

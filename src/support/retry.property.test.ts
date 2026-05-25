@@ -1,11 +1,9 @@
-// Feature: ai-chatbot-playwright-tests, Property 1: Exponential backoff retry correctness
+// Property: Exponential backoff retry correctness
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fc from 'fast-check';
 import { withRetry, setDelay } from './retry';
 
 /**
- * **Validates: Requirements 11.2**
- *
  * Property 1: Exponential backoff retry correctness
  *
  * For any sequence of N consecutive failures (where N < maxAttempts) followed by a success,

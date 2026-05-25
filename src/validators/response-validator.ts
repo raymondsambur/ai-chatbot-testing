@@ -4,7 +4,7 @@
  * evaluates them in order (structural → keywords → negative patterns → semantic),
  * and returns detailed results for each layer.
  *
- * This module is standalone with no browser/page dependency (requirement 12.7).
+ * This module is standalone with no browser/page dependency.
  */
 
 import { ValidationResult } from './types';

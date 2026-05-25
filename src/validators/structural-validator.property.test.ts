@@ -1,4 +1,4 @@
-// Feature: ai-chatbot-playwright-tests, Property 5: Structural assertion correctness
+// Property: Structural assertion correctness
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
@@ -10,8 +10,6 @@ import {
 } from './structural-validator';
 
 /**
- * **Validates: Requirements 12.4**
- *
  * Property 5: Structural assertion correctness
  * For any string, the structural validator SHALL:
  * (a) pass the non-empty check if and only if the trimmed string has length > 0

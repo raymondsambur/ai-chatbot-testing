@@ -1,4 +1,4 @@
-// Feature: ai-chatbot-playwright-tests, Property 2: Semantic similarity score bounds and identity
+// Property: Semantic similarity score bounds and identity
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
@@ -6,8 +6,6 @@ import { calculateSimilarity } from './semantic-validator';
 
 /**
  * Property-based tests for semantic similarity score bounds and identity.
- *
- * Validates: Requirements 12.1
  *
  * Property: For any two non-empty strings, the semantic similarity score
  * SHALL be a number in the range [0, 1]. For any non-empty string compared

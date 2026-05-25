@@ -1,12 +1,10 @@
-// Feature: ai-chatbot-playwright-tests, Property 6: Combined validation is conjunction of layers with detailed failures
+// Property: Combined validation is conjunction of layers with detailed failures
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { validate, validateAll } from './response-validator';
 
 /**
- * **Validates: Requirements 12.5, 12.6**
- *
  * Property 6: Combined validation is conjunction of layers with detailed failures
  * For any response string and validation options specifying multiple layers,
  * the combined validation SHALL pass if and only if ALL specified layers pass individually.

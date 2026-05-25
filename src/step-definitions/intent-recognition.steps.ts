@@ -11,14 +11,7 @@ import assert from 'node:assert';
 import { CustomWorld } from '../support/world';
 import { KEYWORD_SETS, NEGATIVE_PATTERNS } from '../validators/constants';
 
-/**
- * Shared precondition: ensures the chatbot page is loaded and the
- * chat input is interactive before each scenario.
- * NOTE: This step is now defined in hallucination-detection.steps.ts
- * as the canonical location. Removed from here to avoid duplicate.
- */
-
-// --- Factual Questions (Requirement 4.1) ---
+// --- Factual Questions ---
 
 When(
   'the user asks a factual question {string}',
@@ -43,10 +36,7 @@ Then(
   },
 );
 
-// NOTE: "the response should contain at least one complete sentence" step
-// is defined in tone-persona.steps.ts as the canonical location.
-
-// --- Help Requests (Requirement 4.2) ---
+// --- Help Requests ---
 
 When('the user sends a help request {string}', async function (this: CustomWorld, message: string) {
   await this.chatbotPage.sendMessage(message);
@@ -80,7 +70,7 @@ Then(
   },
 );
 
-// --- Command-Style Inputs (Requirement 4.3) ---
+// --- Command-Style Inputs ---
 
 When(
   'the user sends a command-style input {string}',
@@ -193,7 +183,7 @@ Then('the response should not be a refusal', async function (this: CustomWorld) 
   );
 });
 
-// --- Sentiment/Opinion (Requirement 4.4) ---
+// --- Sentiment/Opinion ---
 
 When(
   'the user expresses a sentiment {string}',
@@ -220,7 +210,7 @@ Then(
   },
 );
 
-// --- Ambiguous Questions (Requirement 4.5) ---
+// --- Ambiguous Questions ---
 
 When(
   'the user asks an ambiguous question {string}',
@@ -250,7 +240,7 @@ Then(
       structural: { minLength },
     });
 
-    // Requirement 4.5: passes if EITHER condition is met (OR logic)
+    // Passes if EITHER condition is met (OR logic)
     const passed = keywordResult.passed || lengthResult.passed;
     assert.ok(
       passed,

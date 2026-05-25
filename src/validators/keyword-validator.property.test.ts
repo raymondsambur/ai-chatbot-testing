@@ -1,12 +1,10 @@
-// Feature: ai-chatbot-playwright-tests, Property 3: Keyword set matching correctness
+// Property: Keyword set matching correctness
 
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { validateKeywords } from './keyword-validator';
 
 /**
- * Validates: Requirements 12.2
- *
  * Property: For any response string and keyword set, the keyword matcher SHALL
  * return true if and only if the response contains at least one keyword from the
  * set (case-insensitive substring match). For any response that contains none of

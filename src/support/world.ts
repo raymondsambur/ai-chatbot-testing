@@ -13,9 +13,7 @@ import { ResponseValidator } from '../validators/response-validator';
 import { TestConfig, config } from './config';
 
 /**
- * ChatbotPage interface placeholder.
- * The full implementation is created in task 5.3 (chatbot.page.ts).
- * This interface defines the contract that hooks will satisfy.
+ * ChatbotPage interface — defines the contract for page interactions.
  */
 export interface ChatbotPage {
   navigateTo(): Promise<void>;

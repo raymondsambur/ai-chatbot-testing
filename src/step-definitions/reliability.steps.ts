@@ -2,8 +2,6 @@
  * Step definitions for reliability feature scenarios.
  * Tests timeout handling, retry logic with exponential backoff,
  * and service unavailability detection.
- *
- * Requirements: 11.1, 11.2, 11.3, 11.6, 11.8, 7.1, 7.4, 7.5
  */
 
 import { Given, When, Then } from '@cucumber/cucumber';
@@ -25,7 +23,7 @@ When(
 
 /**
  * Asserts that the chatbot response arrives within 30 seconds.
- * Uses waitForResponseComplete with the configured response timeout (Req 11.1).
+ * Uses waitForResponseComplete with the configured response timeout.
  */
 Then('the response should arrive within 30 seconds', async function (this: CustomWorld) {
   const startTime = Date.now();
@@ -42,7 +40,7 @@ Then('the response should arrive within 30 seconds', async function (this: Custo
 
 /**
  * Simulates a timeout scenario by attempting to wait for a response
- * with a very short timeout, verifying the timeout error behavior (Req 11.3).
+ * with a very short timeout, verifying the timeout error behavior.
  */
 When('I send a message and the response times out', async function (this: CustomWorld) {
   await this.chatbotPage.sendMessage('Tell me a very long and detailed story');
@@ -60,7 +58,7 @@ When('I send a message and the response times out', async function (this: Custom
 
 /**
  * Verifies that a timeout produces a descriptive error message
- * indicating the response was not received within the allowed duration (Req 11.3).
+ * indicating the response was not received within the allowed duration.
  */
 Then(
   'a timeout error should be raised with a descriptive message',
@@ -78,7 +76,7 @@ Then(
 
 /**
  * Sends a message that may trigger rate limiting, storing the
- * message context for the retry assertion step (Req 11.8).
+ * message context for the retry assertion step.
  */
 When('I send a message that may be rate limited', async function (this: CustomWorld) {
   await this.chatbotPage.sendMessage('What is 2 + 2?');
@@ -87,7 +85,7 @@ When('I send a message that may be rate limited', async function (this: CustomWo
 /**
  * Verifies that the response can be retrieved using the retry utility
  * with exponential backoff. Wraps the response retrieval in withRetry
- * to demonstrate retry logic handling (Req 11.2, 11.8).
+ * to demonstrate retry logic handling.
  */
 Then('the response should be retrieved with retry logic', async function (this: CustomWorld) {
   const response = await withRetry(
@@ -109,7 +107,7 @@ Then('the response should be retrieved with retry logic', async function (this: 
 
 /**
  * Verifies that the retry response is non-empty, confirming the retry
- * mechanism successfully retrieved a valid response (Req 11.2).
+ * mechanism successfully retrieved a valid response.
  */
 Then('the retry response should not be empty', async function (this: CustomWorld) {
   assert.ok(
@@ -124,7 +122,7 @@ Then('the retry response should not be empty', async function (this: CustomWorld
 
 /**
  * Simulates a page load failure scenario by verifying the skip behavior
- * when the chatbot page doesn't load within 10 seconds (Req 11.6).
+ * when the chatbot page doesn't load within 10 seconds.
  *
  * This step validates that the hooks.ts Before hook correctly handles
  * page load timeouts by skipping the scenario. Here we simulate the
@@ -141,7 +139,7 @@ Given('the chatbot page fails to load within 10 seconds', async function (this: 
 
 /**
  * Verifies that the scenario detects service unavailability when
- * the page fails to load within the timeout (Req 11.6).
+ * the page fails to load within the timeout.
  */
 Then(
   'the scenario should be skipped with a service unavailable message',

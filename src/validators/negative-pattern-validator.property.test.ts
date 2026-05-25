@@ -1,5 +1,4 @@
-// Feature: ai-chatbot-playwright-tests, Property 4: Negative pattern exclusion correctness
-// **Validates: Requirements 12.3**
+// Property: Negative pattern exclusion correctness
 
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';

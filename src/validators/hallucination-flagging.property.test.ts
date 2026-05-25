@@ -1,5 +1,4 @@
-// Feature: ai-chatbot-playwright-tests, Property 7: Hallucination flagging on total validation failure
-// **Validates: Requirements 5.6**
+// Property: Hallucination flagging on total validation failure
 
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
